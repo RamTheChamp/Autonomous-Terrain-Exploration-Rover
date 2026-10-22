@@ -44,7 +44,7 @@ It avoids obstacles with a time-of-flight sensor on a scanning servo, tracks its
 <img src="docs/architecture.svg" alt="System architecture diagram" width="90%">
 </div>
 
-The ESP32 broadcasts the `MarsRover-AP` network. Any client — a phone app or the browser dashboard in this repo — connects to `ws://192.168.4.1/ws` and speaks the same small JSON protocol (see [Communication Protocol](#-communication-protocol)).
+The ESP32 broadcasts the `MarsRover-AP` network. Any client — a phone app or the browser dashboard in this repo — connects to `ws://192.168.4.1/ws` and speaks the same small JSON protocol.
 
 ## 📸 Gallery
 
@@ -66,7 +66,7 @@ The ESP32 broadcasts the `MarsRover-AP` network. Any client — a phone app or t
 
 ### Mobile App (companion controller)
 
-A companion mobile app drives the rover over the same WebSocket protocol — D-pad, speed control, manual/autonomous toggle, voice commands, animated radar, live charts and an offline GPS trail. *(The app's source code is not part of this repository.)*
+A companion mobile app drives the rover over the same WebSocket protocol — D-pad, speed control, manual/autonomous toggle, voice commands, animated radar, live charts and an offline GPS trail.
 
 <table>
   <tr>
