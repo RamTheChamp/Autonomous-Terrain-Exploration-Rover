@@ -12,7 +12,7 @@
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 <!-- Replace with your best photo of the rover. Keep the filename. -->
-<img src="docs/images/rover-hero.jpg" alt="Autonomous Terrain Exploration Rover" width="80%">
+<img src="docs/rover.png" alt="Autonomous Terrain Exploration Rover" width="80%">
 
 </div>
 
@@ -41,7 +41,7 @@ It avoids obstacles with a time-of-flight sensor on a scanning servo, tracks its
 ## 🏗️ System Architecture
 
 <div align="center">
-<img src="docs/images/architecture.svg" alt="System architecture diagram" width="90%">
+<img src="docs/architecture.svg" alt="System architecture diagram" width="90%">
 </div>
 
 The ESP32 broadcasts the `MarsRover-AP` network. Any client — a phone app or the browser dashboard in this repo — connects to `ws://192.168.4.1/ws` and speaks the same small JSON protocol (see [Communication Protocol](#-communication-protocol)).
@@ -53,9 +53,9 @@ The ESP32 broadcasts the `MarsRover-AP` network. Any client — a phone app or t
 <!-- Add 3–4 real photos of the build. Same filenames as below, or edit the paths. -->
 <table>
   <tr>
-    <td><img src="docs/images/rover-top-view.jpg" alt="Top view"></td>
-    <td><img src="docs/images/rover-electronics.jpg" alt="Electronics and wiring"></td>
-    <td><img src="docs/images/rover-sensors.jpg" alt="Sensor mast with ToF and servo"></td>
+    <td><img src="docs/rover.jpg" alt="Top view"></td>
+    <td><img src="docs/wiring-connection.jpg" alt="Electronics and wiring"></td>
+    
   </tr>
   <tr align="center">
     <td><sub>Top view</sub></td>
@@ -70,9 +70,9 @@ A companion mobile app drives the rover over the same WebSocket protocol — D-p
 
 <table>
   <tr>
-    <td><img src="docs/images/app-controls.png" alt="App: drive controls" width="250"></td>
-    <td><img src="docs/images/app-radar.png" alt="App: proximity radar" width="250"></td>
-    <td><img src="docs/images/app-charts.png" alt="App: telemetry charts" width="250"></td>
+    <td><img src="docs/control1.jpeg" alt="App: drive controls" width="250"></td>
+    <td><img src="docs/control2.jpeg" alt="App: telemetry charts" width="250"></td>
+    <td><img src="docs/control3.jpeg" alt="App: telemetry charts" width="250"></td>
   </tr>
   <tr align="center">
     <td><sub>Drive controls</sub></td>
@@ -81,44 +81,10 @@ A companion mobile app drives the rover over the same WebSocket protocol — D-p
   </tr>
 </table>
 
-### Web Dashboard
 
-<div align="center">
-<img src="docs/images/web-dashboard.png" alt="Browser dashboard" width="85%">
-</div>
 
-## 🎬 Demo Videos
 
-<!--
-  Option A (best): drag an .mp4 (under ~10 MB) into this file while editing on github.com.
-  GitHub inserts a link that renders as an inline player. Paste it on its own line here.
 
-  Option B: upload to YouTube (unlisted is fine) and use a clickable thumbnail:
-  [![Watch the demo](docs/images/video-thumbnail.jpg)](https://youtu.be/YOUR_VIDEO_ID)
--->
-
-| Obstacle avoidance | Autonomous mode | App control |
-|---|---|---|
-| *(video link)* | *(video link)* | *(video link)* |
-
-## 📁 Repository Structure
-
-```
-Autonomous-Terrain-Exploration-Rover/
-├── firmware/
-│   └── mars_rover_main/
-│       └── mars_rover_main.ino      # ESP32 firmware: drive, sensors, WebSocket server
-├── web_dashboard/
-│   ├── app.py                        # Flask server that hosts the dashboard page
-│   ├── requirements.txt
-│   └── templates/
-│       └── index.html                # Dashboard UI (HTML/CSS/JS WebSocket client)
-├── docs/
-│   ├── images/                       # photos, screenshots, architecture diagram
-│   └── videos/                       # short demo clips (optional)
-├── LICENSE
-└── README.md
-```
 
 ## 🔧 Hardware
 
@@ -201,13 +167,9 @@ Everything runs over one WebSocket (`ws://<esp32-ip>/ws`) exchanging small JSON 
 - Range is limited to WiFi coverage; long-range operation would need LoRa or similar.
 - Traffic is unencrypted (`ws://`) — acceptable on a closed local network for an academic project.
 
-## 📄 License
 
-Released under the [MIT License](LICENSE).
 
-## 👤 Author
 
 **Ram Gautam** — Electronics, Communication and Information Engineering, TU IOE Purwanchal Campus, Dharan, Nepal
 Robotics · IoT · Embedded Systems
 
-[GitHub](https://github.com/YOUR_USERNAME) · [LinkedIn](https://www.linkedin.com/in/YOUR_PROFILE)
