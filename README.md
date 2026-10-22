@@ -51,8 +51,8 @@ The ESP32 broadcasts the `MarsRover-AP` network. Any client — a phone app or t
 <!-- Add 3–4 real photos of the build. Same filenames as below, or edit the paths. -->
 <table>
   <tr>
-    <td><img src="docs/rover.jpeg" alt="Top view"></td>
-    <td><img src="docs/wiring-connection.jpeg" alt="Electronics and wiring"></td>
+    <td><img src="docs/rover.png" alt="Top view"></td>
+    <td><img src="docs/wiring-connection.png" alt="Electronics and wiring"></td>
     
   </tr>
   <tr align="center">
