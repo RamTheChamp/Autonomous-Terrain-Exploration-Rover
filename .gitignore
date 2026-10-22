@@ -1,0 +1,18 @@
+# ---- Python / Flask ----
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# ---- Arduino ----
+build/
+*.hex
+*.elf
+*.bin
+
+# ---- General ----
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Mars Rover Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0a0e14; --bg2:#0e131b; --panel:#131a24; --border:#26313f; --accent:#e0662a; --accent2:#ff8a4c;
+    --text:#eef2f6; --dim:#8592a3; --ok:#3ecf8e; --warn:#ff5c5c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:radial-gradient(ellipse at top, var(--bg2), var(--bg) 60%);
+    color:var(--text); padding:24px; min-height:100vh;
+  }
+  .header{margin-bottom:22px;}
+  .header-row{display:flex; align-items:center; gap:10px;}
+  h1{
+    font-size:1.5rem; letter-spacing:1.5px; margin:0;
+    background:linear-gradient(90deg, var(--accent2), var(--accent));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    font-weight:800;
+  }
+  .sub{color:var(--dim); font-size:.85rem; margin-top:4px;}
+  .conn-row{display:flex; gap:8px; margin:18px 0 22px; flex-wrap:wrap; align-items:center;}
+  input{
+    background:var(--panel); border:1px solid var(--border); color:var(--text);
+    padding:9px 12px; border-radius:8px; font-size:.9rem; width:190px;
+    transition:border-color .15s;
+  }
+  input:focus{outline:none; border-color:var(--accent);}
+  button{
+    background:var(--panel); border:1px solid var(--border); color:var(--text);
+    padding:9px 18px; border-radius:8px; cursor:pointer; font-size:.9rem;
+    transition:all .15s;
+  }
+  button:hover{border-color:var(--accent); transform:translateY(-1px);}
+  button:active{transform:translateY(0);}
+  .status{padding:4px 12px; border-radius:12px; font-size:.75rem; align-self:center; display:flex; align-items:center; gap:6px;}
+  .status::before{content:''; width:7px; height:7px; border-radius:50%;}
+  .status.connected{background:rgba(62,207,142,.15); color:var(--ok);}
+  .status.connected::before{background:var(--ok); box-shadow:0 0 6px var(--ok); animation:pulse 1.6s ease-in-out infinite;}
+  .status.disconnected{background:rgba(255,92,92,.15); color:var(--warn);}
+  .status.disconnected::before{background:var(--warn);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  #missionTimer{color:var(--dim); font-size:.8rem; align-self:center;}
+
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media (max-width:760px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:20px; transition:border-color .2s;
+  }
+  .panel:hover{border-color:#354052;}
+  .panel h2{font-size:.85rem; color:var(--dim); text-transform:uppercase; letter-spacing:.5px; margin:0 0 14px;}
+
+  .telemetry{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .metric{background:var(--bg2); border-radius:9px; padding:11px 13px; border:1px solid transparent; transition:border-color .2s;}
+  .metric:hover{border-color:var(--border);}
+  .metric .label{font-size:.68rem; color:var(--dim); text-transform:uppercase; letter-spacing:.4px;}
+  .metric .value{font-size:1.2rem; margin-top:3px; font-weight:600;}
+  .metric .value.alert{color:var(--warn);}
+
+  .dpad{display:grid; grid-template-columns:60px 60px 60px; grid-template-rows:60px 60px 60px; gap:8px; justify-content:center; margin-top:10px;}
+  .dpad button{width:60px; height:60px; font-size:1.4rem; border-radius:10px;}
+  .dpad .stop{background:linear-gradient(135deg, var(--warn), #d64545); color:#fff; border:none;}
+  .dpad .empty{visibility:hidden;}
+
+  .speed-row{margin-top:18px; display:flex; align-items:center; gap:10px;}
+  input[type=range]{flex:1; width:auto; accent-color:var(--accent);}
+
+  .toggle-row{margin-top:14px; display:flex; align-items:center; gap:8px; font-size:.85rem; color:var(--dim);}
+
+  a.map-link{color:var(--accent); font-size:.8rem; text-decoration:none;}
+  a.map-link:hover{text-decoration:underline;}
+
+  #mapPanel{grid-column:1 / -1;}
+  #trailMap{height:320px; border-radius:9px; margin-top:6px; border:1px solid var(--border);}
+  #envChartPanel, #gasChartPanel{grid-column:1 / -1;}
+  #envChart, #gasChart{max-height:230px; margin-top:6px;}
+
+  .radar-wrap{position:relative; display:flex; flex-direction:column; align-items:center;}
+  .radar-svg{width:100%; max-width:260px;}
+  #radarSweep{transform-origin:100px 100px; animation:sweep 2.4s ease-in-out infinite;}
+  @keyframes sweep{
+    0%{transform:rotate(-80deg);}
+    50%{transform:rotate(80deg);}
+    100%{transform:rotate(-80deg);}
+  }
+  #radarBlip{filter:drop-shadow(0 0 6px var(--warn));}
+  .radar-readout{margin-top:8px; text-align:center;}
+
+  .mode-row{display:flex; gap:8px; margin-top:14px;}
+  .mode-btn{flex:1; padding:10px; border-radius:9px; font-size:.85rem;}
+  .mode-btn.active{border-color:var(--accent); color:var(--accent2); background:rgba(224,102,42,.14); box-shadow:0 0 0 1px var(--accent) inset;}
+
+  .mic-btn{margin-top:10px; width:100%; padding:12px; border-radius:9px; font-size:.9rem; display:flex; align-items:center; justify-content:center; gap:8px;}
+  .mic-btn.listening{border-color:var(--warn); color:var(--warn); background:rgba(255,92,92,.12); animation:pulse 1s ease-in-out infinite;}
+  #voiceHeard{font-size:.75rem; color:var(--dim); margin-top:6px; min-height:1em;}
+
+  .gas-badge{display:inline-block; padding:2px 10px; border-radius:10px; font-size:.7rem; margin-left:8px;}
+  .gas-badge.safe{background:rgba(62,207,142,.15); color:var(--ok);}
+  .gas-badge.warn{background:rgba(255,92,92,.15); color:var(--warn);}
+</style>
+</head>
+<body>
+
+<h1>🛰️ MARS ROVER — MISSION CONTROL</h1>
+<div class="sub">Connect to the ESP32 over WiFi to drive the rover and view live telemetry.</div>
+
+<div class="conn-row">
+  <input id="espIp" placeholder="ESP32 IP e.g. 192.168.4.1" />
+  <button onclick="connect()">Connect</button>
+  <span id="connStatus" class="status disconnected">Disconnected</span>
+  <span id="missionTimer"></span>
+</div>
+
+<div class="grid">
+
+  <div class="panel">
+    <h2>Drive Control</h2>
+    <div class="dpad">
+      <div class="empty"></div>
+      <button onmousedown="sendCmd('forward')" onmouseup="sendCmd('stop')" ontouchstart="sendCmd('forward')" ontouchend="sendCmd('stop')">▲</button>
+      <div class="empty"></div>
+
+      <button onmousedown="sendCmd('left')" onmouseup="sendCmd('stop')" ontouchstart="sendCmd('left')" ontouchend="sendCmd('stop')">◀</button>
+      <button class="stop" onclick="sendCmd('stop')">■</button>
+      <button onmousedown="sendCmd('right')" onmouseup="sendCmd('stop')" ontouchstart="sendCmd('right')" ontouchend="sendCmd('stop')">▶</button>
+
+      <div class="empty"></div>
+      <button onmousedown="sendCmd('backward')" onmouseup="sendCmd('stop')" ontouchstart="sendCmd('backward')" ontouchend="sendCmd('stop')">▼</button>
+      <div class="empty"></div>
+    </div>
+
+    <div class="speed-row">
+      <span style="font-size:.8rem;color:var(--dim)">Speed</span>
+      <input type="range" id="speedSlider" min="0" max="255" value="200" oninput="sendSpeed(this.value)" />
+      <span id="speedVal">200</span>
+    </div>
+
+    <div class="toggle-row">
+      <input type="checkbox" id="autoAvoid" checked onchange="sendAutoAvoid(this.checked)" />
+      <label for="autoAvoid">Auto obstacle avoidance</label>
+    </div>
+
+    <div class="mode-row">
+      <button id="manualBtn" class="mode-btn active" onclick="setMode(false)">Manual</button>
+      <button id="autoBtn" class="mode-btn" onclick="setMode(true)">Autonomous</button>
+    </div>
+
+    <button id="micBtn" class="mic-btn" onclick="toggleVoice()">🎤 Hold to speak a command</button>
+    <div id="voiceHeard"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Live Telemetry</h2>
+    <div class="telemetry">
+      <div class="metric"><div class="label">Distance ahead</div><div class="value" id="m-dist">--</div></div>
+      <div class="metric"><div class="label">Obstacle</div><div class="value" id="m-obs">--</div></div>
+      <div class="metric"><div class="label">Temperature</div><div class="value" id="m-temp">--</div></div>
+      <div class="metric"><div class="label">Humidity</div><div class="value" id="m-hum">--</div></div>
+      <div class="metric"><div class="label">Gas (MQ-5 raw)</div><div class="value" id="m-gas">--</div></div>
+      <div class="metric"><div class="label">GPS fix</div><div class="value" id="m-fix">--</div></div>
+      <div class="metric"><div class="label">Left wheel RPM</div><div class="value" id="m-lrpm">--</div></div>
+      <div class="metric"><div class="label">Right wheel RPM</div><div class="value" id="m-rrpm">--</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <a class="map-link" id="mapLink" href="#" target="_blank">View last GPS position on Google Maps →</a>
+    </div>
+  </div>
+
+  <div class="panel" id="mapPanel">
+    <h2>GPS Breadcrumb Trail</h2>
+    <div id="trailMap"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Proximity Radar</h2>
+    <div class="radar-wrap">
+      <svg viewBox="0 0 200 110" class="radar-svg">
+        <path d="M10,100 A90,90 0 0,1 190,100" fill="none" stroke="#243040" stroke-width="2"/>
+        <path d="M40,100 A60,60 0 0,1 160,100" fill="none" stroke="#243040" stroke-width="1"/>
+        <path d="M70,100 A30,30 0 0,1 130,100" fill="none" stroke="#243040" stroke-width="1"/>
+        <line id="radarSweep" x1="100" y1="100" x2="100" y2="14" stroke="#3ecf8e" stroke-width="2"/>
+        <circle id="radarBlip" cx="100" cy="55" r="6" fill="var(--warn)" style="display:none"/>
+      </svg>
+      <div class="radar-readout">
+        <div id="radarStatus" class="value">Clear</div>
+        <div id="radarDist" style="font-size:.75rem;color:var(--dim);">-- cm</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="envChartPanel">
+    <h2>Temperature &amp; Humidity Over Time</h2>
+    <canvas id="envChart"></canvas>
+  </div>
+
+  <div class="panel" id="gasChartPanel">
+    <h2>Gas Level (MQ-5) Over Time <span id="gasBadge" class="gas-badge safe">SAFE</span></h2>
+    <canvas id="gasChart"></canvas>
+  </div>
+
+</div>
+
+<script>
+let ws = null;
+
+// ---------------------- Breadcrumb map ----------------------
+let map = null, trailLine = null, roverMarker = null;
+const trailPoints = [];
+
+function initMap(lat, lng) {
+  map = L.map('trailMap').setView([lat, lng], 18);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 20
+  }).addTo(map);
+  trailLine = L.polyline([], { color: '#e0662a', weight: 4 }).addTo(map);
+  roverMarker = L.circleMarker([lat, lng], { radius: 7, color: '#3ecf8e', fillColor: '#3ecf8e', fillOpacity: 1 }).addTo(map);
+}
+
+function addTrailPoint(lat, lng) {
+  const last = trailPoints[trailPoints.length - 1];
+  // Skip near-duplicate points so the line doesn't jitter from GPS noise
+  if (last && Math.abs(last[0] - lat) < 0.000015 && Math.abs(last[1] - lng) < 0.000015) return;
+
+  trailPoints.push([lat, lng]);
+  if (!map) { initMap(lat, lng); return; }
+  trailLine.setLatLngs(trailPoints);
+  roverMarker.setLatLng([lat, lng]);
+  map.panTo([lat, lng]);
+}
+
+// ---------------------- Proximity radar + alarm beep ----------------------
+let audioCtx = null;
+function beep() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.frequency.value = 900;
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.12);
+}
+
+let beepInterval = null;
+function setObstacleAlarm(active) {
+  if (active && !beepInterval) {
+    beep();
+    beepInterval = setInterval(beep, 300);
+  } else if (!active && beepInterval) {
+    clearInterval(beepInterval);
+    beepInterval = null;
+  }
+}
+
+function updateRadar(distMM, obstacle) {
+  const status = document.getElementById('radarStatus');
+  const distEl = document.getElementById('radarDist');
+  const blip = document.getElementById('radarBlip');
+
+  if (distMM !== undefined) {
+    distEl.textContent = distMM > 0 ? (distMM / 10).toFixed(1) + ' cm' : 'out of range';
+  }
+  if (obstacle) {
+    status.textContent = 'OBSTACLE';
+    status.className = 'value alert';
+    blip.style.display = 'block';
+  } else {
+    status.textContent = 'Clear';
+    status.className = 'value';
+    blip.style.display = 'none';
+  }
+  setObstacleAlarm(obstacle);
+}
+
+// ---------------------- Temp/Humidity chart ----------------------
+const MAX_POINTS = 40;
+const envLabels = [], tempData = [], humData = [];
+
+const envChart = new Chart(document.getElementById('envChart'), {
+  type: 'line',
+  data: {
+    labels: envLabels,
+    datasets: [
+      { label: 'Temp (°C)', data: tempData, borderColor: '#e0662a', backgroundColor: 'transparent', tension: 0.3, yAxisID: 'y' },
+      { label: 'Humidity (%)', data: humData, borderColor: '#3ecf8e', backgroundColor: 'transparent', tension: 0.3, yAxisID: 'y1' }
+    ]
+  },
+  options: {
+    animation: false,
+    scales: {
+      x: { ticks: { color: '#7d8a9a' }, grid: { color: '#243040' } },
+      y: { position: 'left', ticks: { color: '#e0662a' }, grid: { color: '#243040' } },
+      y1: { position: 'right', ticks: { color: '#3ecf8e' }, grid: { display: false } }
+    },
+    plugins: { legend: { labels: { color: '#e6edf3' } } }
+  }
+});
+
+function addEnvPoint(temp, hum) {
+  const t = new Date().toLocaleTimeString();
+  envLabels.push(t);
+  tempData.push(temp);
+  humData.push(hum);
+  if (envLabels.length > MAX_POINTS) {
+    envLabels.shift(); tempData.shift(); humData.shift();
+  }
+  envChart.update();
+}
+
+// ---------------------- Gas (MQ-5) chart ----------------------
+const GAS_WARN_THRESHOLD = 1800;   // tune to your MQ-5 module + calibration
+const gasLabels = [], gasData = [];
+
+const gasChart = new Chart(document.getElementById('gasChart'), {
+  type: 'line',
+  data: {
+    labels: gasLabels,
+    datasets: [
+      { label: 'Gas raw (ADC)', data: gasData, borderColor: '#ff8a4c', backgroundColor: 'rgba(255,138,76,.08)', fill: true, tension: 0.3 }
+    ]
+  },
+  options: {
+    animation: false,
+    scales: {
+      x: { ticks: { color: '#8592a3' }, grid: { color: '#26313f' } },
+      y: { ticks: { color: '#8592a3' }, grid: { color: '#26313f' } }
+    },
+    plugins: { legend: { labels: { color: '#eef2f6' } } }
+  }
+});
+
+function addGasPoint(raw) {
+  const t = new Date().toLocaleTimeString();
+  gasLabels.push(t);
+  gasData.push(raw);
+  if (gasLabels.length > MAX_POINTS) { gasLabels.shift(); gasData.shift(); }
+  gasChart.update();
+
+  const badge = document.getElementById('gasBadge');
+  if (raw >= GAS_WARN_THRESHOLD) {
+    badge.textContent = 'HAZARD'; badge.className = 'gas-badge warn';
+  } else {
+    badge.textContent = 'SAFE'; badge.className = 'gas-badge safe';
+  }
+}
+
+// ---------------------- Mission timer ----------------------
+let missionStart = null, timerInterval = null;
+function startMissionTimer() {
+  missionStart = Date.now();
+  timerInterval = setInterval(() => {
+    const secs = Math.floor((Date.now() - missionStart) / 1000);
+    const m = String(Math.floor(secs / 60)).padStart(2, '0');
+    const s = String(secs % 60).padStart(2, '0');
+    document.getElementById('missionTimer').textContent = `Mission time ${m}:${s}`;
+  }, 1000);
+}
+function stopMissionTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('missionTimer').textContent = '';
+}
+
+// ---------------------- Manual / Autonomous mode ----------------------
+function setMode(auto) {
+  send({ auto_mode: auto });
+  document.getElementById('manualBtn').classList.toggle('active', !auto);
+  document.getElementById('autoBtn').classList.toggle('active', auto);
+}
+
+// ---------------------- Voice control ----------------------
+let recognition = null;
+let listening = false;
+
+function toggleVoice() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    alert('Voice control needs Chrome (desktop or Android). Not supported in this browser.');
+    return;
+  }
+  if (listening) { recognition.stop(); return; }
+
+  recognition = new SpeechRec();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    listening = true;
+    document.getElementById('micBtn').classList.add('listening');
+    document.getElementById('micBtn').textContent = '🎤 Listening...';
+  };
+  recognition.onend = () => {
+    listening = false;
+    document.getElementById('micBtn').classList.remove('listening');
+    document.getElementById('micBtn').textContent = '🎤 Hold to speak a command';
+  };
+  recognition.onresult = (event) => {
+    const heard = event.results[0][0].transcript.toLowerCase();
+    document.getElementById('voiceHeard').textContent = `Heard: "${heard}"`;
+    parseVoiceCommand(heard);
+  };
+  recognition.start();
+}
+
+function parseVoiceCommand(text) {
+  if (text.includes('forward') || text.includes('go') || text.includes('ahead')) sendCmd('forward');
+  else if (text.includes('back') || text.includes('reverse')) sendCmd('backward');
+  else if (text.includes('left')) sendCmd('left');
+  else if (text.includes('right')) sendCmd('right');
+  else if (text.includes('stop') || text.includes('halt')) sendCmd('stop');
+  else if (text.includes('autonomous') || text.includes('auto mode') || text.includes('self drive')) setMode(true);
+  else if (text.includes('manual')) setMode(false);
+  else document.getElementById('voiceHeard').textContent += ' — command not recognized';
+}
+
+function connect() {
+  const ip = document.getElementById('espIp').value.trim() || window.location.hostname;
+  if (!ip) { alert('Enter the ESP32 IP address first.'); return; }
+  if (ws) ws.close();
+
+  ws = new WebSocket(`ws://${ip}/ws`);
+
+  ws.onopen = () => { setStatus(true); startMissionTimer(); };
+  ws.onclose = () => { setStatus(false); stopMissionTimer(); };
+  ws.onerror = () => setStatus(false);
+  ws.onmessage = (evt) => {
+    try {
+      const data = JSON.parse(evt.data);
+      updateTelemetry(data);
+    } catch (e) { /* ignore non-JSON frames */ }
+  };
+}
+
+function setStatus(connected) {
+  const el = document.getElementById('connStatus');
+  el.textContent = connected ? 'Connected' : 'Disconnected';
+  el.className = 'status ' + (connected ? 'connected' : 'disconnected');
+}
+
+function send(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+}
+function sendCmd(cmd)   { send({ cmd }); }
+function sendSpeed(v)   { document.getElementById('speedVal').textContent = v; send({ speed: parseInt(v) }); }
+function sendAutoAvoid(v){ send({ auto_avoid: v }); }
+
+function updateTelemetry(d) {
+  if (d.distance_mm !== undefined) {
+    document.getElementById('m-dist').textContent =
+      d.distance_mm > 0 ? (d.distance_mm / 10).toFixed(1) + ' cm' : 'out of range';
+  }
+  if (d.obstacle !== undefined) {
+    const el = document.getElementById('m-obs');
+    el.textContent = d.obstacle ? 'YES' : 'clear';
+    el.className = 'value' + (d.obstacle ? ' alert' : '');
+  }
+  updateRadar(d.distance_mm, d.obstacle);
+  if (d.temp_c !== undefined)     document.getElementById('m-temp').textContent = isFinite(d.temp_c) ? d.temp_c.toFixed(1) + ' °C' : '--';
+  if (d.humidity !== undefined)   document.getElementById('m-hum').textContent  = isFinite(d.humidity) ? d.humidity.toFixed(1) + ' %' : '--';
+  if (isFinite(d.temp_c) && isFinite(d.humidity)) addEnvPoint(d.temp_c, d.humidity);
+  if (d.gas_raw !== undefined) {
+    document.getElementById('m-gas').textContent = d.gas_raw;
+    addGasPoint(d.gas_raw);
+  }
+  if (d.gps_fix !== undefined)    document.getElementById('m-fix').textContent  = d.gps_fix ? `${d.sats} sats` : 'no fix';
+  if (d.left_rpm !== undefined)   document.getElementById('m-lrpm').textContent = d.left_rpm.toFixed(1);
+  if (d.right_rpm !== undefined)  document.getElementById('m-rrpm').textContent = d.right_rpm.toFixed(1);
+
+  if (d.gps_fix && d.lat && d.lng) {
+    document.getElementById('mapLink').href = `https://www.google.com/maps?q=${d.lat},${d.lng}`;
+    addTrailPoint(d.lat, d.lng);
+  }
+
+  if (d.auto_mode !== undefined) {
+    document.getElementById('manualBtn').classList.toggle('active', !d.auto_mode);
+    document.getElementById('autoBtn').classList.toggle('active', d.auto_mode);
+  }
+}
+</script>
+
+</body>
+</html>
