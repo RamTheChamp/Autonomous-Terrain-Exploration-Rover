@@ -8,8 +8,6 @@
 ![ESP32](https://img.shields.io/badge/ESP32-Arduino%20C%2B%2B-00979D?logo=arduino&logoColor=white)
 ![Flask](https://img.shields.io/badge/Dashboard-Flask%20%2B%20JS-000000?logo=flask&logoColor=white)
 ![WebSocket](https://img.shields.io/badge/Protocol-WebSocket-e0662a)
-![Status](https://img.shields.io/badge/Status-Defended%20%E2%9C%94-3ecf8e)
-![License](https://img.shields.io/badge/License-MIT-blue)
 
 <!-- Replace with your best photo of the rover. Keep the filename. -->
 <img src="docs/rover.png" alt="Autonomous Terrain Exploration Rover" width="80%">
@@ -41,7 +39,7 @@ It avoids obstacles with a time-of-flight sensor on a scanning servo, tracks its
 ## 🏗️ System Architecture
 
 <div align="center">
-<img src="docs/architecture.svg" alt="System architecture diagram" width="90%">
+<img src="architecture.svg" alt="System architecture diagram" width="90%">
 </div>
 
 The ESP32 broadcasts the `MarsRover-AP` network. Any client — a phone app or the browser dashboard in this repo — connects to `ws://192.168.4.1/ws` and speaks the same small JSON protocol.
@@ -53,14 +51,13 @@ The ESP32 broadcasts the `MarsRover-AP` network. Any client — a phone app or t
 <!-- Add 3–4 real photos of the build. Same filenames as below, or edit the paths. -->
 <table>
   <tr>
-    <td><img src="docs/rover.jpg" alt="Top view"></td>
-    <td><img src="docs/wiring-connection.jpg" alt="Electronics and wiring"></td>
+    <td><img src="docs/rover.jpeg" alt="Top view"></td>
+    <td><img src="docs/wiring-connection.jpeg" alt="Electronics and wiring"></td>
     
   </tr>
   <tr align="center">
     <td><sub>Top view</sub></td>
     <td><sub>Electronics &amp; wiring</sub></td>
-    <td><sub>ToF + servo scanner</sub></td>
   </tr>
 </table>
 
@@ -70,13 +67,13 @@ A companion mobile app drives the rover over the same WebSocket protocol — D-p
 
 <table>
   <tr>
-    <td><img src="docs/control1.jpeg" alt="App: drive controls" width="250"></td>
-    <td><img src="docs/control2.jpeg" alt="App: telemetry charts" width="250"></td>
-    <td><img src="docs/control3.jpeg" alt="App: telemetry charts" width="250"></td>
+    <td><img src="docs/control1.jpeg" alt="App: drive controls" width="200"></td>
+    <td><img src="docs/control2.jpeg" alt="App: telemetry charts" width="200"></td>
+    <td><img src="docs/control3.jpeg" alt="App: telemetry charts" width="200"></td>
   </tr>
   <tr align="center">
     <td><sub>Drive controls</sub></td>
-    <td><sub>Proximity radar</sub></td>
+    <td><sub>Live Graph</sub></td>
     <td><sub>Live telemetry</sub></td>
   </tr>
 </table>
